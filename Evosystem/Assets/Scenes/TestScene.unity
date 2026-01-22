@@ -404,10 +404,21 @@ MonoBehaviour:
   sensors: []
   chaseSensor: {fileID: 1049550684}
   attackSensor: {fileID: 1283389384}
-  restPosition: {fileID: 1144348308}
-  foodPosition: {fileID: 876239412}
+  navMeshAgent: {fileID: 0}
+  animations: {fileID: 0}
+  rb: {fileID: 0}
+  entity: {fileID: 11400000, guid: 5ab7216fff78c304a99d51d936f1bacd, type: 2}
   health: 50
   energy: 100
+  stamina: 100
+  hunger: 0
+  thirst: 0
+  desire: 0
+  stress: 0
+  target: {fileID: 0}
+  dangerSource: {fileID: 0}
+  restPositionCurrent: {fileID: 0}
+  foodPositionCurrent: {fileID: 0}
 --- !u!114 &372659265
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -13,22 +13,21 @@ public class GoapAgent : MonoBehaviour
     [SerializeField] Sensor chaseSensor;
     [SerializeField] Sensor attackSensor;
 
-    [Header("KnownLocations")]
-    [SerializeField] Transform restPosition;
-    [SerializeField] Transform foodPosition;
-
-    NavMeshAgent navMeshAgent;
-    AnimationController animations;
-    Rigidbody rb;
+    public NavMeshAgent navMeshAgent;
+    public AnimationController animations;
+    public Rigidbody rb;
 
     [Header("Stats")]
-    public float health = 100f;
-    public float energy = 100f;
+    public Entity entity;
+    public EntityStatus status;
 
     CountdownTimer statsTimer;
 
-    GameObject target;
+    public GameObject target;
+    public GameObject dangerSource;
     Vector3 destination;
+    public Transform restPositionCurrent;
+    public Transform foodPositionCurrent;
 
     AgentGoal lastGoal;
     public AgentGoal currentGoal { get; private set; }
@@ -53,10 +52,23 @@ public class GoapAgent : MonoBehaviour
 
     private void Start()
     {
+        SetupEntity();
         SetupTimers();
         SetupBeliefs();
         SetupActions();
         SetupGoals();
+    }
+
+    private void SetupEntity()
+    {
+        // create a copy of the entity scriptable object
+        entity = Instantiate(entity);
+
+        // initialize stats with attributes
+        entity.Stats = entity.InitializeStats(entity.Attributes);
+
+        // initialize status with updated stats
+        status = EntityUtils.InitializeEntityStatus(entity.Stats);
     }
 
     private void SetupTimers()
@@ -72,18 +84,7 @@ public class GoapAgent : MonoBehaviour
 
     void SetupBeliefs()
     {
-        beliefs = new Dictionary<string, AgentBelief>();
-        BeliefFactory factory = new BeliefFactory(this, beliefs);
-        factory.AddBelief("Nothing", () => false);
-        factory.AddBelief("AgentIdle", () => !navMeshAgent.hasPath);
-        factory.AddBelief("AgentMoving", () => navMeshAgent.hasPath);
-        factory.AddBelief("LowHealth", () => health <= 30f);
-        factory.AddBelief("AgentIsHealthy", () => health >= 80f);
-        factory.AddBelief("LowEnergy", () => energy <= 30f);
-        factory.AddBelief("AgentIsRested", () => energy >= 80f);
-
-        factory.AddLocationBelief("AgentAtFood", 3f, foodPosition);
-        factory.AddLocationBelief("AgentAtRest", 6f, restPosition);
+        beliefs = entity.InitializeBeliefs(this);
     }
 
     void SetupActions()
@@ -102,66 +103,66 @@ public class GoapAgent : MonoBehaviour
 
         actions.Add(new AgentAction.Builder("Eat")
             .WithStrategy(new IdleStrategy(5))
-            .AddPrecondition(beliefs["AgentAtFood"])
+            .AddPrecondition(beliefs["AgentNearFood"])
             .AddEffect(beliefs["AgentIsHealthy"])
             .Build());
 
         actions.Add(new AgentAction.Builder("MoveToFood")
-            .WithStrategy(new MoveStrategy(navMeshAgent, () => beliefs["AgentAtFood"].Location))
+            .WithStrategy(new MoveStrategy(navMeshAgent, () => beliefs["FoodLocationKnown"].Location))
             .AddPrecondition(beliefs["LowHealth"])
-            .AddEffect(beliefs["AgentAtFood"])
+            .AddPrecondition(beliefs["FoodLocationKnown"])
+            .AddEffect(beliefs["AgentNearFood"])
             .Build());
 
         actions.Add(new AgentAction.Builder("Rest")
             .WithStrategy(new IdleStrategy(15))
-            .AddPrecondition(beliefs["AgentAtRest"])
+            .AddPrecondition(beliefs["AgentNearRestSpot"])
             .AddEffect(beliefs["AgentIsRested"])
             .Build());
 
         actions.Add(new AgentAction.Builder("MoveToRest")
-            .WithStrategy(new MoveStrategy(navMeshAgent, () => beliefs["AgentAtRest"].Location))
+            .WithStrategy(new MoveStrategy(navMeshAgent, () => beliefs["RestLocationKnown"].Location))
             .AddPrecondition(beliefs["LowEnergy"])
-            .AddEffect(beliefs["AgentAtRest"])
+            .AddPrecondition(beliefs["RestLocationKnown"])
+            .AddEffect(beliefs["AgentNearRestSpot"])
             .Build());
     }
 
     void SetupGoals()
     {
-        goals = new HashSet<AgentGoal>();
+        goals = entity.InitializeGoals(this, beliefs);
 
-        goals.Add(new AgentGoal.Builder("Chill")
-            .WithPriority(0)
-            .AddDesiredState(beliefs["Nothing"])
-            .Build());
+        //goals = new HashSet<AgentGoal>();
 
-        goals.Add(new AgentGoal.Builder("Explore")
-            .WithPriority(1)
-            .AddDesiredState(beliefs["AgentMoving"])
-            .Build());
+        //goals.Add(new AgentGoal.Builder("Chill")
+        //    .WithPriority(0)
+        //    .AddDesiredState(beliefs["Nothing"])
+        //    .Build());
 
-        goals.Add(new AgentGoal.Builder("KeepEnergyUp")
-            .WithPriority(2)
-            .AddDesiredState(beliefs["AgentIsRested"])
-            .Build());
+        //goals.Add(new AgentGoal.Builder("Explore")
+        //    .WithPriority(1)
+        //    .AddDesiredState(beliefs["AgentMoving"])
+        //    .Build());
 
-        goals.Add(new AgentGoal.Builder("KeepHealthUp")
-            .WithPriority(3)
-            .AddDesiredState(beliefs["AgentIsHealthy"])
-            .Build());
+        //goals.Add(new AgentGoal.Builder("KeepEnergyUp")
+        //    .WithPriority(2)
+        //    .AddDesiredState(beliefs["AgentIsRested"])
+        //    .Build());
+
+        //goals.Add(new AgentGoal.Builder("KeepHealthUp")
+        //    .WithPriority(3)
+        //    .AddDesiredState(beliefs["AgentIsHealthy"])
+        //    .Build());
 
     }
 
     // set up a real stats system
     void UpdateStats()
     {
-        // this is very rudimentary stat management for demo purposes
-        energy += InRangeof(restPosition.position, 5f) ? 5f : -1.5f;
-        health += InRangeof(foodPosition.position, 5f) ? 10f : -1f;
-        energy = Mathf.Clamp(energy, 0f, 100f);
-        health = Mathf.Clamp(health, 0f, 100f);
+        status = EntityUtils.ProcessEntityStatus(entity.Stats, status);
     }
 
-    bool InRangeof(Vector3 pos, float range) =>  Vector3.Distance(transform.position, pos) <= range;
+    public bool InRangeof(Vector3 pos, float range) =>  Vector3.Distance(transform.position, pos) <= range;
 
     private void OnEnable() => chaseSensor.OnTargetChanged += HandleTargetChanged;
     private void OnDisable() => chaseSensor.OnTargetChanged -= HandleTargetChanged;

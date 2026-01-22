@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 052c1ff1e14ce5941837dc98fd7d67c5, type: 3}
+  m_Name: Entity
+  m_EditorClassIdentifier: Assembly-CSharp::Entity
+  Tags: 00000000
+  Attributes:
+    Strength: 10
+    Agility: 10
+    Intelligence: 10
+    Charisma: 10
+    Endurance: 10
+    Perception: 10
+  Stats:
+    Health: 1000
+    Speed: 10
+    Power: 10
+    Defense: 10
+    Age: 10
+    HealthRegenRate: 1
+    HealthConsumptionRate: 1
+    Stamina: 100
+    StaminaRegenRate: 1
+    StaminaConsumptionRate: 1
+    Energy: 100
+    EnergyRegenRate: 1
+    EnergyConsumptionRate: 1
+    Hunger: 100
+    HungerThreshold: 80
+    HungerRate: 1
+    Thirst: 100
+    ThirstThreshold: 80
+    ThirstRate: 1
+    Desire: 100
+    DesireThreshold: 80
+    DesireRate: 1
+    StressThreshold: 0
+    StressRate: 0
+    StressRecoveryRate: 0

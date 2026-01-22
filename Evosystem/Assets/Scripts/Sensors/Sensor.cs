@@ -4,8 +4,8 @@ using UnityEngine;
 [RequireComponent(typeof(SphereCollider))]
 public class Sensor: MonoBehaviour
 {
-    [SerializeField] float SensingRadius = 5f;
-    [SerializeField] float timerInterval = 1f;
+    [SerializeField] protected float SensingRadius = 5f;
+    [SerializeField] protected float timerInterval = 1f;
     private SphereCollider detectionRange;
 
     public event Action OnTargetChanged = delegate { };
@@ -56,6 +56,7 @@ public class Sensor: MonoBehaviour
         if (!other.CompareTag("Targetable")) return;
         UpdateTargetPosition(other.gameObject);
     }
+
     void OnTriggerExit(Collider other)
     {
         // Add logic for when an object exits the sensing radius
