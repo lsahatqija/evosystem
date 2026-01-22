@@ -27,6 +27,13 @@ public class Entity : ScriptableObject
     public EntityAttributes Attributes;
     public EntityStats Stats;
 
+    public bool IsPregnant = false;
+
+    public bool IsTagPresent(EntityTag tag)
+    {
+        return Tags.Contains(tag);
+    }
+
     public EntityAttributes CombineAttributes(EntityAttributes M, EntityAttributes F, float stress)
     {
         // todo: sanitize stress input
@@ -103,6 +110,8 @@ public class Entity : ScriptableObject
         factory.AddBelief("AgentMoving", () => agent.navMeshAgent.hasPath);
 
         factory.AddBelief("HasTarget", () => agent.target != null);
+        factory.AddBelief("NoTarget", () => agent.target == null);
+        factory.AddBelief("TargetInRange", () => agent.target != null && agent.InRangeof(agent.target.transform.position, 5f));
         factory.AddBelief("DangerClose", () => agent.dangerSource != null && agent.InRangeof(agent.dangerSource.transform.position, 10f));
         factory.AddBelief("NoDanger", () => agent.dangerSource == null || !agent.InRangeof(agent.dangerSource.transform.position, 10f));
 
@@ -125,6 +134,7 @@ public class Entity : ScriptableObject
         factory.AddBelief("Thirsty", () => agent.status.Thirst > agent.entity.Stats.ThirstThreshold);
         factory.AddBelief("NotThirsty", () => agent.status.Thirst <= agent.entity.Stats.Thirst * .1f);
         factory.AddBelief("AgentIsDrinking", () => agent.currentAction != null && agent.currentAction.Name == "Drink" && agent.InRangeof(beliefs["DrinkLocation"].Location, 1f));
+        factory.AddBelief("AgentNearDrinkSpot", () => beliefs.ContainsKey("DrinkLocation") && agent.InRangeof(beliefs["DrinkLocation"].Location, 1f));
 
         factory.AddBelief("Lusty", () => agent.status.Desire > agent.entity.Stats.DesireThreshold);
         factory.AddBelief("NotLusty", () => agent.status.Desire <= agent.entity.Stats.Desire * .1f);
@@ -133,6 +143,7 @@ public class Entity : ScriptableObject
         factory.AddBelief("RestLocationKnown", () => beliefs.ContainsKey("RestLocation") && beliefs["RestLocation"].Location != Vector3.zero);
         factory.AddBelief("DrinkLocationKnown", () => beliefs.ContainsKey("DrinkLocation") && beliefs["DrinkLocation"].Location != Vector3.zero);
 
+        factory.AddBelief("Pregnant", () => agent.entity.IsPregnant && agent.entity.IsTagPresent(EntityTag.Female));
 
 
         return beliefs;
@@ -142,6 +153,140 @@ public class Entity : ScriptableObject
     {
         HashSet<AgentAction> actions = new HashSet<AgentAction>();
         // Actions would be initialized here similarly to the GoapAgent example
+        actions.Add(new AgentAction.Builder("Relax")
+            .WithCost(0)
+            .AddPrecondition(beliefs["NotHungry"])
+            .AddPrecondition(beliefs["NotThirsty"])
+            .AddPrecondition(beliefs["AgentIsRested"])
+            .AddPrecondition(beliefs["NoDanger"])
+            .AddPrecondition(beliefs["NotLusty"])
+            .WithStrategy(new IdleStrategy(10))
+            .AddEffect(beliefs["Nothing"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Wander")
+            .WithCost(1)
+            .WithStrategy(new WanderStrategy(agent.navMeshAgent, 60f))
+            .AddEffect(beliefs["AgentMoving"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Explore")
+            .WithCost(2)
+            .WithStrategy(new WanderStrategy(agent.navMeshAgent, 600f))
+            .AddEffect(beliefs["AgentMoving"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Rest")
+            .WithCost(1)
+            .WithStrategy(new RestStrategy())       // implement rest strategy
+            .AddPrecondition(beliefs["LowEnergy"])
+            .AddPrecondition(beliefs["RestLocationKnown"])
+            .AddPrecondition(beliefs["AgentNearRestSpot"])
+            .AddEffect(beliefs["AgentIsResting"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("FinishResting")
+            .WithCost(0)
+            .AddPrecondition(beliefs["AgentIsResting"])
+            .WithStrategy(new IdleStrategy(1))
+            .AddEffect(beliefs["AgentIsRested"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Eat")
+            .WithCost(1)
+            .WithStrategy(new EatStrategy())        // implement eat strategy
+            .AddPrecondition(beliefs["Hungry"])
+            .AddPrecondition(beliefs["FoodLocationKnown"])
+            .AddPrecondition(beliefs["AgentNearFood"])
+            .AddEffect(beliefs["AgentIsEating"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("FinishEating")
+            .WithCost(0)
+            .AddPrecondition(beliefs["AgentIsEating"])
+            .WithStrategy(new IdleStrategy(1))
+            .AddEffect(beliefs["NotHungry"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Drink")
+            .WithCost(1)
+            .WithStrategy(new DrinkStrategy())      // implement drink strategy
+            .AddPrecondition(beliefs["Thirsty"])
+            .AddPrecondition(beliefs["DrinkLocationKnown"])
+            .AddPrecondition(beliefs["AgentNearDrinkSpot"])
+            .AddEffect(beliefs["AgentIsDrinking"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("FinishDrinking")
+            .WithCost(0)
+            .AddPrecondition(beliefs["AgentIsDrinking"])
+            .WithStrategy(new IdleStrategy(1))
+            .AddEffect(beliefs["NotThirsty"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Flee")
+            .WithCost(0)
+            .WithStrategy(new FleeStrategy())       // implement flee strategy    
+            .AddPrecondition(beliefs["DangerClose"])
+            .AddEffect(beliefs["NoDanger"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Mate")
+            .WithCost(3)
+            .WithStrategy(new MateStrategy())       // implement mate strategy
+            .AddPrecondition(beliefs["Lusty"])
+            .AddEffect(beliefs["NotLusty"])
+            .AddEffect(beliefs["Pregnant"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Chase")
+            .WithCost(5)
+            .WithStrategy(new ChaseStrategy())      // implement chase strategy
+            .AddPrecondition(beliefs["HasTarget"])
+            .AddEffect(beliefs["AgentMoving"])
+            .AddEffect(beliefs["TargetInRange"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Attack")
+            .WithCost(4)
+            .WithStrategy(new AttackStrategy())     // implement attack strategy
+            .AddPrecondition(beliefs["HasTarget"])
+            .AddEffect(beliefs["Nothing"])          // define appropriate effect
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Forage")
+            .WithCost(2)
+            .WithStrategy(new ForageStrategy())     // implement forage strategy
+            .AddEffect(beliefs["FoodLocationKnown"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("SearchWater")
+            .WithCost(2)
+            .WithStrategy(new SearchWaterStrategy()) // implement search water strategy
+            .AddEffect(beliefs["DrinkLocationKnown"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Follow")
+            .WithCost(2)
+            .WithStrategy(new FollowStrategy())     // implement follow strategy
+            .AddPrecondition(beliefs["HasTarget"])
+            .AddEffect(beliefs["AgentMoving"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Sleep")
+            .WithCost(2)
+            .WithStrategy(new SleepStrategy())      // implement sleep strategy
+            .AddPrecondition(beliefs["LowEnergy"])
+            .AddEffect(beliefs["AgentIsRested"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Birth")
+            .WithCost(5)
+            .AddPrecondition(beliefs["Pregnant"])
+            .WithStrategy(new BirthStrategy())      // implement birth strategy
+            .AddEffect(beliefs["Nothing"])          // define appropriate effect
+            .Build());
+
         return actions;
     }
 

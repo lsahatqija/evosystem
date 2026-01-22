@@ -89,71 +89,12 @@ public class GoapAgent : MonoBehaviour
 
     void SetupActions()
     {
-        actions = new HashSet<AgentAction>();
-
-        actions.Add(new AgentAction.Builder("Relax")
-            .WithStrategy(new IdleStrategy(5))
-            .AddEffect(beliefs["Nothing"])
-            .Build());
-
-        actions.Add(new AgentAction.Builder("Wander")
-            .WithStrategy(new WanderStrategy(navMeshAgent, 30))
-            .AddEffect(beliefs["AgentMoving"])
-            .Build());
-
-        actions.Add(new AgentAction.Builder("Eat")
-            .WithStrategy(new IdleStrategy(5))
-            .AddPrecondition(beliefs["AgentNearFood"])
-            .AddEffect(beliefs["AgentIsHealthy"])
-            .Build());
-
-        actions.Add(new AgentAction.Builder("MoveToFood")
-            .WithStrategy(new MoveStrategy(navMeshAgent, () => beliefs["FoodLocationKnown"].Location))
-            .AddPrecondition(beliefs["LowHealth"])
-            .AddPrecondition(beliefs["FoodLocationKnown"])
-            .AddEffect(beliefs["AgentNearFood"])
-            .Build());
-
-        actions.Add(new AgentAction.Builder("Rest")
-            .WithStrategy(new IdleStrategy(15))
-            .AddPrecondition(beliefs["AgentNearRestSpot"])
-            .AddEffect(beliefs["AgentIsRested"])
-            .Build());
-
-        actions.Add(new AgentAction.Builder("MoveToRest")
-            .WithStrategy(new MoveStrategy(navMeshAgent, () => beliefs["RestLocationKnown"].Location))
-            .AddPrecondition(beliefs["LowEnergy"])
-            .AddPrecondition(beliefs["RestLocationKnown"])
-            .AddEffect(beliefs["AgentNearRestSpot"])
-            .Build());
+        actions = entity.InitializeActions(this, beliefs);
     }
 
     void SetupGoals()
     {
         goals = entity.InitializeGoals(this, beliefs);
-
-        //goals = new HashSet<AgentGoal>();
-
-        //goals.Add(new AgentGoal.Builder("Chill")
-        //    .WithPriority(0)
-        //    .AddDesiredState(beliefs["Nothing"])
-        //    .Build());
-
-        //goals.Add(new AgentGoal.Builder("Explore")
-        //    .WithPriority(1)
-        //    .AddDesiredState(beliefs["AgentMoving"])
-        //    .Build());
-
-        //goals.Add(new AgentGoal.Builder("KeepEnergyUp")
-        //    .WithPriority(2)
-        //    .AddDesiredState(beliefs["AgentIsRested"])
-        //    .Build());
-
-        //goals.Add(new AgentGoal.Builder("KeepHealthUp")
-        //    .WithPriority(3)
-        //    .AddDesiredState(beliefs["AgentIsHealthy"])
-        //    .Build());
-
     }
 
     // set up a real stats system

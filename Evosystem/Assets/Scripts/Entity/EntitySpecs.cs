@@ -164,6 +164,7 @@ public struct EntityStatus
 [Serializable]
 public enum Species
 {
+    None,
     Rabbit,
     Fox
 }
