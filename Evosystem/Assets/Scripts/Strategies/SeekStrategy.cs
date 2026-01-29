@@ -1,4 +1,4 @@
-﻿internal class SearchWaterStrategy : IActionStrategy
+﻿internal class SeekStrategy : IActionStrategy
 {
     public bool CanPerform => throw new System.NotImplementedException();
 

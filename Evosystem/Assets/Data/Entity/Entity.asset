@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 052c1ff1e14ce5941837dc98fd7d67c5, type: 3}
   m_Name: Entity
   m_EditorClassIdentifier: Assembly-CSharp::Entity
-  Tags: 00000000
+  species: 3
+  IsTags: 0500000003000000
+  HasTags: 0c00000012000000
+  WantsTags: 0c0000000f0000000e0000001000000016000000150000001900000037000000
+  AvoidTags: 2d00000020000000
   Attributes:
     Strength: 10
     Agility: 10
@@ -26,13 +30,13 @@ MonoBehaviour:
     Power: 10
     Defense: 10
     Age: 10
-    HealthRegenRate: 1
+    HealthRegenRate: 10
     HealthConsumptionRate: 1
     Stamina: 100
-    StaminaRegenRate: 1
+    StaminaRegenRate: 10
     StaminaConsumptionRate: 1
     Energy: 100
-    EnergyRegenRate: 1
+    EnergyRegenRate: 10
     EnergyConsumptionRate: 1
     Hunger: 100
     HungerThreshold: 80
@@ -44,5 +48,7 @@ MonoBehaviour:
     DesireThreshold: 80
     DesireRate: 1
     StressThreshold: 0
-    StressRate: 0
-    StressRecoveryRate: 0
+    StressRate: 1
+    StressRecoveryRate: 10
+  IsPregnant: 0
+  IsMale: 1

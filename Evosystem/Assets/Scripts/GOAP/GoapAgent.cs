@@ -6,12 +6,11 @@ using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(AnimationController))]
+[RequireComponent(typeof(Tags))]
 public class GoapAgent : MonoBehaviour
 {
     [Header("Sensors")]
     [SerializeField] private Sensor[] sensors;
-    [SerializeField] Sensor chaseSensor;
-    [SerializeField] Sensor attackSensor;
 
     public NavMeshAgent navMeshAgent;
     public AnimationController animations;
@@ -24,10 +23,14 @@ public class GoapAgent : MonoBehaviour
     CountdownTimer statsTimer;
 
     public GameObject target;
-    public GameObject dangerSource;
     Vector3 destination;
     public Transform restPositionCurrent;
+    public List<Transform> restPositionsKnown;
     public Transform foodPositionCurrent;
+    public List<Transform> foodPositionsKnown;
+    public Transform drinkPositionCurrent;
+    public List<Transform> drinkPositionsKnown;
+    public Transform dangerSource;
 
     AgentGoal lastGoal;
     public AgentGoal currentGoal { get; private set; }
@@ -35,6 +38,7 @@ public class GoapAgent : MonoBehaviour
     public AgentAction currentAction;
 
     public Dictionary<string, AgentBelief> beliefs;
+    BeliefFactory beliefFactory;
     public HashSet<AgentAction> actions;
     public HashSet<AgentGoal> goals;
 
@@ -57,6 +61,7 @@ public class GoapAgent : MonoBehaviour
         SetupBeliefs();
         SetupActions();
         SetupGoals();
+        SetupTags();
     }
 
     private void SetupEntity()
@@ -84,7 +89,7 @@ public class GoapAgent : MonoBehaviour
 
     void SetupBeliefs()
     {
-        beliefs = entity.InitializeBeliefs(this);
+        beliefs = entity.InitializeBeliefs(this, beliefFactory);
     }
 
     void SetupActions()
@@ -97,19 +102,94 @@ public class GoapAgent : MonoBehaviour
         goals = entity.InitializeGoals(this, beliefs);
     }
 
+    void SetupTags()
+    {
+        TryGetComponent<Tags>(out var tagsComponent);
+
+        if (tagsComponent == null)
+        {
+            gameObject.AddComponent<Tags>();
+        }
+
+        tagsComponent.SetTags(entity.IsTags, entity.HasTags, entity.WantsTags, entity.AvoidTags);
+
+        foreach (Sensor sensor in sensors)
+        {
+            sensor.InitializeTags(entity.WantsTags, entity.AvoidTags);
+        }
+    }
+
     // set up a real stats system
     void UpdateStats()
     {
         status = EntityUtils.ProcessEntityStatus(entity.Stats, status);
     }
 
-    public bool InRangeof(Vector3 pos, float range) =>  Vector3.Distance(transform.position, pos) <= range;
+    public bool InRangeof(Vector3 pos, float range) => Vector3.Distance(transform.position, pos) <= range;
 
-    private void OnEnable() => chaseSensor.OnTargetChanged += HandleTargetChanged;
-    private void OnDisable() => chaseSensor.OnTargetChanged -= HandleTargetChanged;
+    private void OnEnable()
+    {
+        foreach (Sensor sensor in sensors)
+        {
+            sensor.OnTargetChanged += HandleTargetChanged;
+            sensor.OnTargetDetected += TargetDetected;
+            sensor.OnDangerDetected += DangerDetected;
+        }
+    }
+
+    private void OnDisable()
+    {
+        foreach (Sensor sensor in sensors)
+        {
+            sensor.OnTargetChanged -= HandleTargetChanged;
+            sensor.OnTargetDetected -= TargetDetected;
+            sensor.OnDangerDetected -= DangerDetected;
+        }
+    }
 
     private void HandleTargetChanged()
     {
+        currentAction = null;
+        currentGoal = null;
+        navMeshAgent.destination = transform.position;
+    }
+
+    private void TargetDetected(Tags target)
+    {
+        //this.target = target.gameObject;
+        BeliefFactory beliefFactory = new BeliefFactory(this, beliefs);
+
+        if (target.Is(EntityTag.Rest))
+        {
+            if (!restPositionsKnown.Contains(target.transform))
+                restPositionsKnown.Add(target.transform);
+        }
+
+        if (target.Is(EntityTag.Food))
+        {
+            if (!foodPositionsKnown.Contains(target.transform))
+                foodPositionsKnown.Add(target.transform);
+        }
+
+        if (target.Is(EntityTag.Water))
+        {
+            if (!drinkPositionsKnown.Contains(target.transform))
+                drinkPositionsKnown.Add(target.transform);
+        }
+
+        //target.TryGetComponent(out GoapAgent targetAgent);
+        //if (targetAgent != null && targetAgent.entity.species == entity.species && entity.IsMale != targetAgent.entity.IsMale && !beliefs.ContainsKey("MateLocation"))
+        //{
+        //    beliefFactory.AddLocationBelief("MateLocation", Vector3.Distance(transform.position, target.transform.position), target.transform);
+        //}
+
+        currentAction = null;
+        currentGoal = null;
+    }
+
+    private void DangerDetected(GameObject danger)
+    {
+        dangerSource = danger.transform;
         currentAction = null;
         currentGoal = null;
     }
@@ -121,6 +201,7 @@ public class GoapAgent : MonoBehaviour
 
         if (currentAction == null)
         {
+            OrderPossibleDestinations();
             CalculatePlan();
 
             if (actionPlan != null && actionPlan.Actions.Count > 0)
@@ -162,6 +243,34 @@ public class GoapAgent : MonoBehaviour
         if (potentialPlan != null)
         {
             actionPlan = potentialPlan;
+        }
+    }
+
+    void OrderPossibleDestinations()
+    {
+        // order rest spots
+        if (restPositionsKnown.Count > 0)
+        {
+            restPositionsKnown.RemoveAll(t => t.gameObject == null);
+            restPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
+            restPositionCurrent = restPositionsKnown[0];
+        }
+
+        // order food spots
+
+        if (foodPositionsKnown.Count > 0)
+        {
+            foodPositionsKnown.RemoveAll(t => t.gameObject == null);
+            foodPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
+            foodPositionCurrent = foodPositionsKnown[0];
+        }
+
+        // order food spots
+        if (drinkPositionsKnown.Count > 0)
+        {
+            drinkPositionsKnown.RemoveAll(t => t.gameObject == null);
+            drinkPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
+            drinkPositionCurrent = drinkPositionsKnown[0];
         }
     }
 }

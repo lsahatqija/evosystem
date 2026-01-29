@@ -14,11 +14,6 @@ public enum EntityTag
 {
     None,
 
-    #region Gender tags
-    Male,
-    Female,
-    #endregion
-
     #region Age tags
     Juvenile,
     Youth,
@@ -36,6 +31,7 @@ public enum EntityTag
     #endregion
 
     #region Food tags
+    Food,
     Meat,
     Insect,
     Fish,
@@ -50,6 +46,7 @@ public enum EntityTag
     Root,
     Seed,
     Fungus,
+    Water,
     #endregion
 
     #region Behavior tags
@@ -70,17 +67,6 @@ public enum EntityTag
     Amphibious,
     #endregion
 
-    #region Habitat tags
-    Forest,
-    Desert,
-    Grassland,
-    Wetland,
-    Mountain,
-    Coastal,
-    Freshwater,
-    Marine,
-    #endregion
-
     #region Food chain tags
     Herbivore,
     Carnivore,
@@ -96,7 +82,16 @@ public enum EntityTag
     Small,
     Medium,
     Large,
-    Huge
+    Huge,
+    #endregion
+
+    #region Location tags
+    Rest,   // generic resting place
+    Nest,
+    Den,
+    Burrow,
+    Hive,
+    Perch,
     #endregion
 }
 
@@ -166,5 +161,6 @@ public enum Species
 {
     None,
     Rabbit,
-    Fox
+    Fox,
+    Bear,
 }
