@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 052c1ff1e14ce5941837dc98fd7d67c5, type: 3}
-  m_Name: Entity
+  m_Name: Rabbit
   m_EditorClassIdentifier: Assembly-CSharp::Entity
-  species: 3
-  entityModel: {fileID: 0}
-  IsTags: 0500000003000000
+  species: 1
+  entityModel: {fileID: 840731402078780594, guid: 50bf0d89f095438448e61792c16f8bef, type: 3}
+  IsTags: 05000000030000002900000031000000
   HasTags: 0c00000012000000
-  WantsTags: 0c0000000f0000000e0000001000000016000000150000001900000037000000
-  AvoidTags: 2d00000020000000
+  WantsTags: 150000001600000019000000
+  AvoidTags: 2d0000002e0000002a0000002b0000001a000000
   Attributes:
     Strength: 10
     Agility: 10
@@ -30,7 +30,7 @@ MonoBehaviour:
     Speed: 10
     Power: 10
     Defense: 10
-    Age: 10
+    Age: 1000000
     Size: 1
     HealthRegenRate: 10
     HealthConsumptionRate: 1

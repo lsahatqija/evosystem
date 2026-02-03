@@ -21,5 +21,7 @@ internal class RestStrategy : IActionStrategy
 
         float staminaDelta = deltaTime * agent.entity.Stats.StaminaRegenRate;
         agent.status.Stamina = Mathf.Clamp(agent.status.Stamina + staminaDelta, 0, agent.entity.Stats.Stamina);
+
+        agent.animations.Lay();
     }
 }

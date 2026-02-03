@@ -31,6 +31,7 @@ public class GoapAgent : MonoBehaviour
     public Transform drinkPositionCurrent;
     public List<Transform> drinkPositionsKnown;
     public Transform dangerSource;
+    public GoapAgent potentialMate;
 
     AgentGoal lastGoal;
     public AgentGoal currentGoal { get; private set; }
@@ -47,7 +48,7 @@ public class GoapAgent : MonoBehaviour
     private void Awake()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
-        animations = GetComponent<AnimationController>();
+        //animations = GetComponent<AnimationController>();
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
 
@@ -56,12 +57,38 @@ public class GoapAgent : MonoBehaviour
 
     private void Start()
     {
+        InitializeAgent();
+    }
+
+    public void InitializeAgent()
+    {
+        if (entity == null)
+            return;
         SetupEntity();
         SetupTimers();
         SetupBeliefs();
         SetupActions();
         SetupGoals();
         SetupTags();
+        SetupModel();
+    }
+
+    private void SetupModel()
+    {
+        if (entity.entityModel == null)
+        {
+            Debug.LogWarning($"Entity model of species {entity.species} does not exist!");
+            return;
+        }
+
+        GameObject model = Instantiate(entity.entityModel, transform);
+        model.TryGetComponent(out Animator modelAnimator);
+
+        TryGetComponent(out animations);
+        if (animations != null && modelAnimator != null)
+            animations.SetAnimator(modelAnimator);
+
+        gameObject.name = $"{entity.species.ToString()} - {entity.UUID}";
     }
 
     private void SetupEntity()
@@ -70,10 +97,12 @@ public class GoapAgent : MonoBehaviour
         entity = Instantiate(entity);
 
         // initialize stats with attributes
-        entity.Stats = entity.InitializeStats(entity.Attributes);
+        entity.Stats = entity.InitializeStats(entity.Stats, entity.Attributes);
 
         // initialize status with updated stats
         status = EntityUtils.InitializeEntityStatus(entity.Stats);
+
+        navMeshAgent.speed = entity.Stats.Speed;
     }
 
     private void SetupTimers()
@@ -156,7 +185,6 @@ public class GoapAgent : MonoBehaviour
 
     private void TargetDetected(Tags target)
     {
-        //this.target = target.gameObject;
         BeliefFactory beliefFactory = new BeliefFactory(this, beliefs);
 
         if (target.Is(EntityTag.Rest))
@@ -177,11 +205,11 @@ public class GoapAgent : MonoBehaviour
                 drinkPositionsKnown.Add(target.transform);
         }
 
-        //target.TryGetComponent(out GoapAgent targetAgent);
-        //if (targetAgent != null && targetAgent.entity.species == entity.species && entity.IsMale != targetAgent.entity.IsMale && !beliefs.ContainsKey("MateLocation"))
-        //{
-        //    beliefFactory.AddLocationBelief("MateLocation", Vector3.Distance(transform.position, target.transform.position), target.transform);
-        //}
+        target.TryGetComponent(out GoapAgent targetAgent);
+        if (targetAgent != null && targetAgent.entity.species == entity.species && entity.IsMale != targetAgent.entity.IsMale)
+        {
+            potentialMate = targetAgent;
+        }
 
         currentAction = null;
         currentGoal = null;
@@ -196,8 +224,12 @@ public class GoapAgent : MonoBehaviour
 
     private void Update()
     {
+        if (entity == null)
+            { return; }
+
         statsTimer.Tick(Time.deltaTime);
-        animations.SetSpeed(navMeshAgent.velocity.magnitude);
+        if (animations != null)
+            animations.SetSpeed(navMeshAgent.velocity.magnitude / entity.Stats.Speed);
 
         if (currentAction == null)
         {
@@ -273,4 +305,5 @@ public class GoapAgent : MonoBehaviour
             drinkPositionCurrent = drinkPositionsKnown[0];
         }
     }
+
 }

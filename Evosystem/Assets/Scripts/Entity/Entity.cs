@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Entity", menuName = "Entity/Entity")]
@@ -19,6 +20,8 @@ public class Entity : ScriptableObject
 
     public Species species;
 
+    public GameObject entityModel;
+
     public List<AgentBelief> initialBeliefs;
     public List<AgentAction> availableActions;
     public List<AgentGoal> initialGoals;
@@ -31,6 +34,7 @@ public class Entity : ScriptableObject
     public EntityStats Stats;
 
     public bool IsPregnant = false;
+    public Entity mateEntity;
     public bool IsMale = false;
 
     public bool IsTagPresent(EntityTag tag)
@@ -62,6 +66,49 @@ public class Entity : ScriptableObject
         attributes.Perception += Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
 
         return attributes;
+    }
+
+    public EntityStats InitializeStats(EntityStats stats, EntityAttributes attributes)
+    {
+        stats.Health = stats.Health * (attributes.Strength * .1f + attributes.Endurance * .1f);
+        stats.HealthRegenRate = stats.HealthRegenRate + EntityUtils.StatVariation(stats.HealthRegenRate);
+        stats.HealthConsumptionRate = stats.HealthConsumptionRate + EntityUtils.StatVariation(stats.HealthConsumptionRate);
+
+        stats.Speed = stats.Speed * attributes.Agility * .1f + EntityUtils.StatVariation(stats.Speed);
+        stats.Power = stats.Power * (attributes.Strength * .1f) + EntityUtils.StatVariation(stats.Power);
+        stats.Defense = stats.Defense * (attributes.Endurance * .1f + attributes.Intelligence * .1f) + EntityUtils.StatVariation(stats.Defense);
+        stats.Age = stats.Age * (attributes.Endurance * .1f + attributes.Intelligence * .1f) + EntityUtils.StatVariation(stats.Age);
+
+        stats.Stamina = stats.Stamina + EntityUtils.StatVariation(stats.Stamina);
+        stats.StaminaRegenRate = stats.StaminaRegenRate + EntityUtils.StatVariation(stats.StaminaRegenRate);
+        stats.StaminaConsumptionRate = stats.StaminaConsumptionRate + EntityUtils.StatVariation(stats.StaminaConsumptionRate);
+
+        stats.Energy = stats.Energy + EntityUtils.StatVariation(stats.Energy);
+        stats.EnergyRegenRate = stats.EnergyRegenRate + EntityUtils.StatVariation(stats.EnergyRegenRate);
+        stats.EnergyConsumptionRate = stats.EnergyConsumptionRate + EntityUtils.StatVariation(stats.EnergyConsumptionRate);
+
+        stats.Hunger = stats.Hunger + EntityUtils.StatVariation(stats.Hunger);
+        stats.HungerThreshold = stats.HungerThreshold + EntityUtils.StatVariation(stats.HungerThreshold);
+        stats.HungerRate = stats.HungerRate + EntityUtils.StatVariation(stats.HungerRate);
+
+        stats.Thirst = stats.Thirst + EntityUtils.StatVariation(stats.Thirst);
+        stats.ThirstThreshold = stats.ThirstThreshold + EntityUtils.StatVariation(stats.ThirstThreshold);
+        stats.ThirstRate = stats.ThirstRate + EntityUtils.StatVariation(stats.ThirstRate);
+
+        stats.Desire = stats.Desire + EntityUtils.StatVariation(stats.Desire);
+        stats.DesireThreshold = stats.DesireThreshold + EntityUtils.StatVariation(stats.DesireThreshold);
+        stats.DesireRate = stats.DesireRate + EntityUtils.StatVariation(stats.DesireRate);
+
+        stats.StressRate = stats.StressRate + EntityUtils.StatVariation(stats.StressRate);
+        stats.StressThreshold = stats.StressThreshold + EntityUtils.StatVariation(stats.StressThreshold);
+        stats.StressRecoveryRate = stats.StressRecoveryRate + EntityUtils.StatVariation(stats.StressRecoveryRate);
+
+        stats.MaleChance = stats.MaleChance + EntityUtils.StatVariation(stats.MaleChance);
+        stats.PregnancyDuration = stats.PregnancyDuration + EntityUtils.StatVariation(stats.PregnancyDuration);
+        stats.EggDuration = stats.EggDuration + EntityUtils.StatVariation(stats.EggDuration);
+        stats.ClutchSize = stats.ClutchSize + (int)EntityUtils.StatVariation(stats.ClutchSize);
+
+        return stats;
     }
 
     public EntityStats InitializeStats(EntityAttributes attributes = null, float stress = 0f)
@@ -400,10 +447,10 @@ public class Entity : ScriptableObject
             .AddDesiredState(beliefs["NotThirsty"])
             .Build());
 
-        //goals.Add(new AgentGoal.Builder("SatisfyDesire")
-        //    .WithPriority(7)
-        //    .AddDesiredState(beliefs["NotLusty"])
-        //    .Build());
+        goals.Add(new AgentGoal.Builder("SatisfyDesire")
+            .WithPriority(7)
+            .AddDesiredState(beliefs["NotLusty"])
+            .Build());
 
         //goals.Add(new AgentGoal.Builder("Safe")
         //    .WithPriority(10)

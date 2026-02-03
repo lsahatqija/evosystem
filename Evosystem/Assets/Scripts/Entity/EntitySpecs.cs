@@ -115,33 +115,40 @@ public class EntityStats
     public float Power;
     public float Defense;
     public float Age;
+    public float Size;
 
     public float HealthRegenRate;
     public float HealthConsumptionRate;
 
-    public int Stamina;             // maximum stamina
+    public float Stamina;             // maximum stamina
     public float StaminaRegenRate;  // rate at which stamina regenerates
     public float StaminaConsumptionRate; // rate at which stamina is consumed
 
-    public int Energy;
+    public float Energy;
     public float EnergyRegenRate;
     public float EnergyConsumptionRate;
 
-    public int Hunger;             // maximum hunger
+    public float Hunger;             // maximum hunger
     public float HungerThreshold;   // the value at which the entity starts feeling hungry
     public float HungerRate;        // rate at which hunger increases
 
-    public int Thirst;             // maximum thirst
+    public float Thirst;             // maximum thirst
     public float ThirstThreshold;   // the value at which the entity starts feeling thirsty
     public float ThirstRate;
 
-    public int Desire;             // maximum desire
+    public float Desire;             // maximum desire
     public float DesireThreshold;   // the value at which the entity starts feeling desire
     public float DesireRate;
 
     public float StressThreshold;  // the value at which stress starts affecting attributes
     public float StressRate;
     public float StressRecoveryRate;
+
+    public float MaleChance = .5f;
+    public float PregnancyDuration = 1000f;
+    public float EggDuration = 1f;
+    public int ClutchSize = 1;
+
 }
 
 [Serializable]
@@ -154,6 +161,7 @@ public struct EntityStatus
     public float Thirst;
     public float Desire;
     public float Stress;
+    public float Age;
 }
 
 [Serializable]
