@@ -13,23 +13,36 @@ public class DeathStrategy : IActionStrategy
 
     public bool CanPerform => agent != null;
 
-    public bool Complete => deathComplete;
+    public bool Complete { get; private set; }
 
     public DeathStrategy(GoapAgent agent)
     {
         this.agent = agent;
         timer = new CountdownTimer(1f);
+        timer.OnTimerStart += () => Complete = false;
+        timer.OnTimerStop += () =>
+        {
+            Stop();
+            Complete = true;
+        };
     }
 
     public void Start()
     {
-        if (deathComplete)
-            return;
-
         agent.animations.Death();
         DropLoot(agent.entity.HasTags);
+        timer.Start();
+    }
+
+    public void Update(float deltaTime)
+    {
+        timer.Tick(deltaTime);
+    }
+
+    public void Stop()
+    {
+        DropLoot(agent.entity.HasTags);
         GameObject.Destroy(agent.gameObject, 3f);
-        deathComplete = true;
     }
 
     public void DropLoot(List<EntityTag> agentTags)

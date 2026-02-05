@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 052c1ff1e14ce5941837dc98fd7d67c5, type: 3}
   m_Name: Entity
   m_EditorClassIdentifier: Assembly-CSharp::Entity
-  species: 3
+  species: 0
   entityModel: {fileID: 0}
   IsTags: 0500000003000000
   HasTags: 0c00000012000000
@@ -52,5 +52,10 @@ MonoBehaviour:
     StressThreshold: 0
     StressRate: 1
     StressRecoveryRate: 10
+    MaleChance: 0.5
+    PregnancyDuration: 1000
+    EggDuration: 1
+    ClutchSize: 1
   IsPregnant: 0
+  mateEntity: {fileID: 0}
   IsMale: 1

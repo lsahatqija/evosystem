@@ -13,6 +13,7 @@ internal class DrinkStrategy : IActionStrategy
     {
         this.agent = agent;
     }
+
     public void Start()
     {
         agent.drinkPositionCurrent.TryGetComponent(out this.drink);

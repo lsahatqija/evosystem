@@ -6,11 +6,18 @@ public class Egg : MonoBehaviour
 
     CountdownTimer timer;
 
+    private void Start()
+    {
+        if (entity != null)
+            InitializeEgg(entity);
+    }
+
     public void InitializeEgg(Entity entity)
     {
         this.entity = entity;
         timer = new CountdownTimer(entity.Stats.EggDuration);
         timer.OnTimerStop += () => Hatch();
+        timer.Start();
     }
 
     private void Update()
@@ -34,5 +41,4 @@ public class Egg : MonoBehaviour
 
         Destroy(gameObject, 1f);
     }
-
 }

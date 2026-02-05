@@ -106,6 +106,10 @@ public class EntityUtils
         stats.HealthRegenRate = Random.Range(0f, 1f) > 0.5f ? M.HealthRegenRate : F.HealthRegenRate;
         stats.HealthConsumptionRate = Random.Range(0f, 1f) > 0.5f ? M.HealthConsumptionRate : F.HealthConsumptionRate;
 
+        stats.Stamina = Random.Range(0f, 1f) > 0.5f ? M.Stamina : F.Stamina;
+        stats.StaminaRegenRate = Random.Range(0f, 1f) > 0.5f ? M.StaminaRegenRate : F.StaminaRegenRate;
+        stats.StaminaConsumptionRate = Random.Range(0f, 1f) > 0.5f ? M.StaminaConsumptionRate : F.StaminaConsumptionRate;
+
         stats.Energy = Random.Range(0f, 1f) > 0.5f ? M.Energy : F.Energy;
         stats.EnergyRegenRate = Random.Range(0f, 1f) > 0.5f ? M.EnergyRegenRate : F.EnergyRegenRate;
         stats.EnergyConsumptionRate = Random.Range(0f, 1f) > 0.5f ? M.EnergyConsumptionRate : F.EnergyConsumptionRate;

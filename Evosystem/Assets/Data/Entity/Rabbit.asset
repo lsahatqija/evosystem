@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Entity
   species: 1
   entityModel: {fileID: 840731402078780594, guid: 50bf0d89f095438448e61792c16f8bef, type: 3}
-  IsTags: 05000000030000002900000031000000
+  IsTags: 0500000003000000290000003100000000000000
   HasTags: 0c00000012000000
-  WantsTags: 150000001600000019000000
+  WantsTags: 000000001500000016000000190000000b00000035000000
   AvoidTags: 2d0000002e0000002a0000002b0000001a000000
   Attributes:
     Strength: 10
@@ -30,7 +30,7 @@ MonoBehaviour:
     Speed: 10
     Power: 10
     Defense: 10
-    Age: 1000000
+    Age: 100000
     Size: 1
     HealthRegenRate: 10
     HealthConsumptionRate: 1
@@ -45,12 +45,17 @@ MonoBehaviour:
     HungerRate: 1
     Thirst: 100
     ThirstThreshold: 80
-    ThirstRate: 3
+    ThirstRate: 1
     Desire: 100
     DesireThreshold: 80
     DesireRate: 1
     StressThreshold: 0
     StressRate: 1
     StressRecoveryRate: 10
+    MaleChance: 0.5
+    PregnancyDuration: 1000
+    EggDuration: 1
+    ClutchSize: 1
   IsPregnant: 0
+  mateEntity: {fileID: 0}
   IsMale: 1

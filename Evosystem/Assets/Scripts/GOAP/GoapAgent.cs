@@ -81,6 +81,12 @@ public class GoapAgent : MonoBehaviour
             return;
         }
 
+        Animator existingAnimator = GetComponentInChildren<Animator>();
+        if (existingAnimator != null)
+        {
+            Destroy(existingAnimator.gameObject);
+        }
+
         GameObject model = Instantiate(entity.entityModel, transform);
         model.TryGetComponent(out Animator modelAnimator);
 
@@ -103,6 +109,7 @@ public class GoapAgent : MonoBehaviour
         status = EntityUtils.InitializeEntityStatus(entity.Stats);
 
         navMeshAgent.speed = entity.Stats.Speed;
+        transform.localScale = Vector3.one * entity.Stats.Size;
     }
 
     private void SetupTimers()
@@ -185,8 +192,6 @@ public class GoapAgent : MonoBehaviour
 
     private void TargetDetected(Tags target)
     {
-        BeliefFactory beliefFactory = new BeliefFactory(this, beliefs);
-
         if (target.Is(EntityTag.Rest))
         {
             if (!restPositionsKnown.Contains(target.transform))
@@ -205,10 +210,13 @@ public class GoapAgent : MonoBehaviour
                 drinkPositionsKnown.Add(target.transform);
         }
 
-        target.TryGetComponent(out GoapAgent targetAgent);
-        if (targetAgent != null && targetAgent.entity.species == entity.species && entity.IsMale != targetAgent.entity.IsMale)
+        if (target.gameObject.layer == gameObject.layer)
         {
-            potentialMate = targetAgent;
+            target.TryGetComponent(out GoapAgent targetAgent);
+            if (targetAgent != null && targetAgent.entity.species == entity.species && entity.IsMale != targetAgent.entity.IsMale)
+            {
+                potentialMate = targetAgent;
+            }
         }
 
         currentAction = null;

@@ -12,7 +12,7 @@ using Unity.VisualScripting;
 [Serializable]
 public enum EntityTag
 {
-    None,
+    Entity,
 
     #region Age tags
     Juvenile,

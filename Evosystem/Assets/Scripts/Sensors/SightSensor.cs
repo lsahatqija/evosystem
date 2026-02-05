@@ -4,7 +4,9 @@ public class SightSensor : Sensor
 {
     public float sightAngle = 60f;
     public float verticalSightAngle = 30f;
-    float angleStep = 5f;
+    float angleStep = 3f;
+
+    public bool drawDebug = false;
 
     protected override void DetectionTick()
     {
@@ -25,7 +27,7 @@ public class SightSensor : Sensor
         int verticalSteps = (int)(verticalSightAngle / angleStep);
         for (int i = (int)(-steps * 0.5f); i < (int)(steps * 0.5f) + 1; i++)
         {
-            for (int j = -1; j < verticalSteps; j++)
+            for (int j = (int)(-verticalSteps * 0.5f); j < (int)(verticalSteps * 0.5f) + 1; j++)
             {
                 Vector3 lookDir = Quaternion.Euler(-angleStep * j, angleStep * i, 0) * transform.forward;
                 Physics.Raycast(transform.position, lookDir, out RaycastHit hit, SensingDistance);
@@ -45,23 +47,24 @@ public class SightSensor : Sensor
                         {
                             if (tagsComponent.Is(tag) || tagsComponent.Has(tag)) ObjectDetected(tagsComponent);
                         }
-                    }
+                    }                    
                 }
             }            
         }
-    }
-
-    
+    }    
 
     private void OnDrawGizmos()
     {
+        if (!drawDebug)
+            return;
+
         Gizmos.color = Color.orange;
 
         int steps = (int)(sightAngle / angleStep);
         int verticalSteps = (int)(verticalSightAngle / angleStep);
         for (int i = (int)(-steps * 0.5f); i < (int)(steps * 0.5f) + 1; i++)
         {
-            for (int j = -1; j < verticalSteps; j++)
+            for (int j = (int)(-verticalSteps * 0.5f); j < (int)(verticalSteps * 0.5f) + 1; j++)
             {
                 Vector3 lookDir = Quaternion.Euler(-angleStep * j, angleStep * i, 0) * transform.forward;
                 Gizmos.DrawLine(transform.position, transform.position + lookDir * SensingDistance);

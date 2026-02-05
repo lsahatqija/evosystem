@@ -17,7 +17,7 @@ public abstract class AnimationController : MonoBehaviour
     [HideInInspector] public int eatClip = Animator.StringToHash("Eat");
     [HideInInspector] public int hitClip = Animator.StringToHash("Hit");
     [HideInInspector] public int deathClip = Animator.StringToHash("Death");
-    [HideInInspector] public int mateClip = Animator.StringToHash("Mate");
+    [HideInInspector] public int mateClip = Animator.StringToHash("Bounce");
 
     void Awake()
     {
@@ -28,6 +28,7 @@ public abstract class AnimationController : MonoBehaviour
         SetHitClip();
         SetEatClip();
         SetLayClip();
+        SetMateClip();
     }
 
     public void SetSpeed(float speed) => animator.SetFloat(speedHash, speed);
