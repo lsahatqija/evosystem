@@ -119,11 +119,11 @@ public class Entity : ScriptableObject
         EntityStats stats = new EntityStats();
 
         // Base stats + attributes modifiers + random stress induced variation
-        stats.Health = Stats.Health * (attributes.Strength * .1f + attributes.Endurance * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
-        stats.Speed = Stats.Speed * attributes.Agility * .1f + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
-        stats.Power = Stats.Power * (attributes.Strength * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
-        stats.Defense = Stats.Defense * (attributes.Endurance * .1f + attributes.Intelligence * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
-        stats.Age = Stats.Age * (attributes.Endurance * .1f + attributes.Intelligence * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
+        stats.Health = Stats.Health + (attributes.Strength * .1f + attributes.Endurance * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
+        stats.Speed = Stats.Speed + attributes.Agility * .1f + Mathf.RoundToInt(stress * Random.Range(-.1f, .1f));
+        stats.Power = Stats.Power + (attributes.Strength * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
+        stats.Defense = Stats.Defense + (attributes.Endurance * .1f + attributes.Intelligence * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
+        stats.Age = Stats.Age + (attributes.Endurance * .1f + attributes.Intelligence * .1f) + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
 
         stats.HealthRegenRate = Stats.HealthRegenRate + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
         stats.HealthConsumptionRate = Stats.HealthConsumptionRate + Mathf.RoundToInt(stress * Random.Range(-1f, 1f));
@@ -176,6 +176,9 @@ public class Entity : ScriptableObject
         factory.AddBelief("AgentIsHealthy", () => agent.status.Health >= agent.entity.Stats.Health * .8f);
         factory.AddBelief("LowStamina", () => agent.status.Stamina <= agent.entity.Stats.Stamina * .1f);
         factory.AddBelief("HighStamina", () => agent.status.Stamina >= agent.entity.Stats.Stamina * .8f);
+        factory.AddBelief("My Time has come", () => agent.status.Health <= 0 || agent.status.Age > agent.entity.Stats.Age);
+        factory.AddBelief("Alive", () => agent.status.Alive);
+        factory.AddBelief("Perished", () => !agent.status.Alive);
         #endregion
 
         #region Energy
@@ -210,6 +213,7 @@ public class Entity : ScriptableObject
         factory.AddBelief("CanMate", () => agent.entity.IsTagPresent(EntityTag.Adult) && (!agent.entity.IsPregnant || agent.entity.IsMale));
         factory.AddBelief("Pregnant", () => agent.entity.IsPregnant && !agent.entity.IsMale);
         factory.AddBelief("!Pregnant", () => !agent.entity.IsPregnant || agent.entity.IsMale);
+        factory.AddBelief("InLabour", () => agent.status.PregTime >= agent.entity.Stats.PregnancyDuration);
         factory.AddBelief("AgentNearMate", () => agent.potentialMate != null && agent.InRangeof(agent.potentialMate.transform.position, 2f));
         factory.AddBelief("!AgentNearMate", () => agent.potentialMate == null || !agent.InRangeof(agent.potentialMate.transform.position, 2f));
         #endregion
@@ -242,6 +246,7 @@ public class Entity : ScriptableObject
         actions.Add(new AgentAction.Builder("Recover")
             .WithCost(0)
             .AddPrecondition(beliefs["LowStamina"])
+            .AddPrecondition(beliefs["Alive"])
             .WithStrategy(new IdleStrategy(agent, 5f))
             .AddEffect(beliefs["HighStamina"])
             .Build());
@@ -252,6 +257,7 @@ public class Entity : ScriptableObject
         actions.Add(new AgentAction.Builder("SeekRest")
             .WithCost(5)
             .AddPrecondition(beliefs["!RestLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .WithStrategy(new WanderStrategy(agent.navMeshAgent, 60f))
             .AddEffect(beliefs["RestLocationKnown"])
             .Build());
@@ -260,6 +266,7 @@ public class Entity : ScriptableObject
             .WithCost(3)
             .WithStrategy(new MoveStrategy(agent.navMeshAgent, () => agent.restPositionCurrent.position))
             .AddPrecondition(beliefs["RestLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["LowEnergy"])
             .AddEffect(beliefs["AgentNearRestSpot"])
             .Build());
@@ -268,6 +275,7 @@ public class Entity : ScriptableObject
             .WithCost(1)
             .WithStrategy(new RestStrategy(agent))
             .AddPrecondition(beliefs["LowEnergy"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["AgentNearRestSpot"])
             .AddEffect(beliefs["AgentIsResting"])
             .Build());
@@ -275,6 +283,7 @@ public class Entity : ScriptableObject
         actions.Add(new AgentAction.Builder("FinishResting")
             .WithCost(0)
             .AddPrecondition(beliefs["AgentIsResting"])
+            .AddPrecondition(beliefs["Alive"])
             .WithStrategy(new IdleStrategy(agent, 1))
             .AddEffect(beliefs["AgentIsRested"])
             .Build());
@@ -284,6 +293,7 @@ public class Entity : ScriptableObject
         actions.Add(new AgentAction.Builder("SeekFood")
             .WithCost(5)
             .AddPrecondition(beliefs["!FoodLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .WithStrategy(new WanderStrategy(agent.navMeshAgent, 60f))
             .AddEffect(beliefs["FoodLocationKnown"])
             .Build());
@@ -292,6 +302,7 @@ public class Entity : ScriptableObject
             .WithCost(3)
             .WithStrategy(new MoveStrategy(agent.navMeshAgent, () => agent.foodPositionCurrent.position))
             .AddPrecondition(beliefs["FoodLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["Hungry"])
             .AddEffect(beliefs["AgentNearFood"])
             .Build());
@@ -300,6 +311,7 @@ public class Entity : ScriptableObject
             .WithCost(1)
             .WithStrategy(new EatStrategy(agent))
             .AddPrecondition(beliefs["Hungry"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["AgentNearFood"])
             .AddEffect(beliefs["NotHungry"])
             .Build());
@@ -309,6 +321,7 @@ public class Entity : ScriptableObject
         actions.Add(new AgentAction.Builder("SeekDrink")
             .WithCost(5)
             .AddPrecondition(beliefs["!DrinkLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .WithStrategy(new WanderStrategy(agent.navMeshAgent, 60f))
             .AddEffect(beliefs["DrinkLocationKnown"])
             .Build());
@@ -317,6 +330,7 @@ public class Entity : ScriptableObject
             .WithCost(3)
             .WithStrategy(new MoveStrategy(agent.navMeshAgent, () => agent.drinkPositionCurrent.position))
             .AddPrecondition(beliefs["DrinkLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["Thirsty"])
             .AddEffect(beliefs["AgentNearDrinkSpot"])
             .Build());
@@ -325,6 +339,7 @@ public class Entity : ScriptableObject
             .WithCost(1)
             .WithStrategy(new DrinkStrategy(agent))
             .AddPrecondition(beliefs["Thirsty"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["AgentNearDrinkSpot"])
             .AddEffect(beliefs["NotThirsty"])
             .Build());
@@ -334,29 +349,40 @@ public class Entity : ScriptableObject
         actions.Add(new AgentAction.Builder("SeekMate")
             .WithCost(1)
             .AddPrecondition(beliefs["!MateLocationKnown"])
+            .AddPrecondition(beliefs["Alive"])
             .WithStrategy(new WanderStrategy(agent.navMeshAgent, 60f))
             .AddEffect(beliefs["MateLocationKnown"])
             .Build());
 
         actions.Add(new AgentAction.Builder("MoveToMate")
             .WithCost(1)
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["Lusty"])
             .AddPrecondition(beliefs["CanMate"])
             .AddPrecondition(beliefs["!Pregnant"])
             .AddPrecondition(beliefs["!AgentNearMate"])
             .AddPrecondition(beliefs["MateLocationKnown"])
-            .WithStrategy(new MoveStrategy(agent.navMeshAgent, () => (agent.potentialMate.transform.position + agent.transform.position) / 2f)) //midpoint between the two
+            .WithStrategy(new MoveStrategy(agent.navMeshAgent, () => agent.potentialMate.transform.position))
             .AddEffect(beliefs["AgentNearMate"])
             .Build());
 
         actions.Add(new AgentAction.Builder("Mate")
             .WithCost(1)
-            .AddPrecondition(beliefs["Lusty"])
+            .AddPrecondition(beliefs["Alive"])
             .AddPrecondition(beliefs["CanMate"])
             .AddPrecondition(beliefs["!Pregnant"])
             .AddPrecondition(beliefs["AgentNearMate"])
             .WithStrategy(new MateStrategy(agent))
             .AddEffect(beliefs["NotLusty"])
+            .Build());
+
+        actions.Add(new AgentAction.Builder("Birth")
+            .WithCost(1)
+            .AddPrecondition(beliefs["Alive"])
+            .AddPrecondition(beliefs["Pregnant"])
+            .AddPrecondition(beliefs["InLabour"])
+            .WithStrategy(new BirthStrategy(agent))
+            .AddEffect(beliefs["!Pregnant"])
             .Build());
 
         //actions.Add(new AgentAction.Builder("Birth")
@@ -366,6 +392,14 @@ public class Entity : ScriptableObject
         //    .AddEffect(beliefs["Nothing"])          // define appropriate effect
         //    .Build());
         #endregion
+
+        actions.Add(new AgentAction.Builder("Die")
+            .WithCost(0)
+            .WithStrategy(new DeathStrategy(agent))
+            .AddPrecondition(beliefs["My Time has come"])
+            .AddPrecondition(beliefs["Alive"])
+            .AddEffect(beliefs["Perished"])
+            .Build());
 
         //actions.Add(new AgentAction.Builder("Flee")
         //    .WithCost(0)
@@ -469,6 +503,16 @@ public class Entity : ScriptableObject
         goals.Add(new AgentGoal.Builder("SatisfyDesire")
             .WithPriority(10)
             .AddDesiredState(beliefs["NotLusty"])
+            .Build());
+
+        goals.Add(new AgentGoal.Builder("Procreate")
+            .WithPriority(100)
+            .AddDesiredState(beliefs["!Pregnant"])
+            .Build());
+
+        goals.Add(new AgentGoal.Builder("Die")
+            .WithPriority(1000)
+            .AddDesiredState(beliefs["Perished"])
             .Build());
 
         //goals.Add(new AgentGoal.Builder("Safe")

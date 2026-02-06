@@ -64,7 +64,7 @@ public class Sensor: MonoBehaviour
         if (IsTargetInRange && (lastKnownPosition != TargetPosition || lastKnownPosition != Vector3.zero))
         {
             lastKnownPosition = TargetPosition;
-            OnTargetChanged.Invoke();
+            OnTargetChanged?.Invoke();
         }
     }
 

@@ -162,6 +162,8 @@ public struct EntityStatus
     public float Desire;
     public float Stress;
     public float Age;
+    public float PregTime;
+    public bool Alive;
 }
 
 [Serializable]

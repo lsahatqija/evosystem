@@ -8,14 +8,14 @@ public class MateStrategy : IActionStrategy
 
     CountdownTimer timer;
 
-    public bool CanPerform => self != null && !self.entity.IsPregnant && mate != null && self.InRangeof(mate.transform.position, 1f) && self.potentialMate != null;
+    public bool CanPerform => self != null && !self.entity.IsPregnant && mate != null && self.InRangeof(mate.transform.position, 2f) && self.potentialMate != null;
     public bool Complete { get; private set; }
 
     public MateStrategy(GoapAgent selfAgent)
     {
         this.self = selfAgent;
 
-        timer = new CountdownTimer(10f);
+        timer = new CountdownTimer(1f);
         timer.OnTimerStart += () => Complete = false;
         timer.OnTimerStop += () => Complete = true;
     }
@@ -24,16 +24,20 @@ public class MateStrategy : IActionStrategy
     public void Start()
     {
         if (self == null || self.potentialMate == null)
-            return;
-
-        mate = self.potentialMate;
-        timer.Start();
+        {
+            mate = null;
+        }
+        else
+        {
+            mate = self.potentialMate;
+            timer.Start();
+        }
     }
 
     public void Update(float deltaTime)
     {
         self.animations.Mate();
-        self.status.Desire = Mathf.Clamp(self.status.Desire - 10f * deltaTime, 0, self.entity.Stats.Desire);
+        self.status.Desire = Mathf.Clamp(self.status.Desire - 50f * deltaTime, 0, self.entity.Stats.Desire);
         timer.Tick(deltaTime);
     }
 
@@ -43,7 +47,10 @@ public class MateStrategy : IActionStrategy
         {
             self.entity.mateEntity = ScriptableObject.Instantiate(mate.entity);
             self.entity.IsPregnant = true;
+            self.status.PregTime = 0;
         }
-        Complete = true;
+        self.status.Desire = 0;
+        self.potentialMate = null;
+        mate = null;
     }
 }

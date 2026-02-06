@@ -57,7 +57,7 @@ public class GoapAgent : MonoBehaviour
 
     private void Start()
     {
-        InitializeAgent();
+        //InitializeAgent();
     }
 
     public void InitializeAgent()
@@ -110,6 +110,8 @@ public class GoapAgent : MonoBehaviour
 
         navMeshAgent.speed = entity.Stats.Speed;
         transform.localScale = Vector3.one * entity.Stats.Size;
+
+        EntityEvents.OnEntitySpawned(entity);
     }
 
     private void SetupTimers()
@@ -291,26 +293,25 @@ public class GoapAgent : MonoBehaviour
         // order rest spots
         if (restPositionsKnown.Count > 0)
         {
-            restPositionsKnown.RemoveAll(t => t.gameObject == null);
+            restPositionsKnown.RemoveAll(t => t == null);
             restPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
             restPositionCurrent = restPositionsKnown[0];
         }
 
         // order food spots
-
-        if (foodPositionsKnown.Count > 0)
+        if (drinkPositionsKnown.Count > 0)
         {
-            foodPositionsKnown.RemoveAll(t => t.gameObject == null);
-            foodPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
-            foodPositionCurrent = foodPositionsKnown[0];
+            drinkPositionsKnown.RemoveAll(t => t == null);
+            drinkPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
+            drinkPositionCurrent = drinkPositionsKnown[0];
         }
 
         // order food spots
-        if (drinkPositionsKnown.Count > 0)
+        if (foodPositionsKnown.Count > 0)
         {
-            drinkPositionsKnown.RemoveAll(t => t.gameObject == null);
-            drinkPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
-            drinkPositionCurrent = drinkPositionsKnown[0];
+            foodPositionsKnown.RemoveAll(t => t == null);
+            foodPositionsKnown.OrderBy(t => Vector3.Distance(t.position, transform.position));
+            foodPositionCurrent = foodPositionsKnown[0];
         }
     }
 

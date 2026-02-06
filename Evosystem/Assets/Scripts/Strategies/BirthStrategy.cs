@@ -13,7 +13,7 @@ internal class BirthStrategy : IActionStrategy
     public BirthStrategy(GoapAgent agent)
     {
         this.agent = agent;
-        timer = new CountdownTimer(10f);
+        timer = new CountdownTimer(1f);
 
         timer.OnTimerStart += () => Complete = false;
         timer.OnTimerStop += () => Complete = true;
@@ -34,28 +34,40 @@ internal class BirthStrategy : IActionStrategy
         GameObject eggPrefab = Resources.Load("Egg") as GameObject;
 
         if (eggPrefab == null)
-            return;
-
-        for (int i = 0; i < agent.entity.Stats.ClutchSize; i++)
         {
-            Vector3 posRand = UnityEngine.Random.insideUnitSphere;
-            posRand.y = 0;
-            GameObject egg = GameObject.Instantiate(eggPrefab, agent.transform.position + posRand, agent.transform.rotation);
-
-            egg.TryGetComponent(out Egg eggComponent);
-            if (eggComponent != null)
+            Debug.LogWarning("Egg resource not found");
+            return;
+        }
+        else
+        {
+            for (int i = 0; i < agent.entity.Stats.ClutchSize; i++)
             {
-                Entity eggEntity = ScriptableObject.Instantiate(agent.entity);
-                eggEntity.Attributes = EntityUtils.CombineAttributes(agent.entity.mateEntity.Attributes, agent.entity.Attributes, agent.status.Stress);
-                eggEntity.Stats = EntityUtils.CombineInitialStats(agent.entity.mateEntity.Stats, agent.entity.Stats);
-                eggEntity.IsPregnant = false;
-                eggEntity.mateEntity = null;
-                eggComponent.InitializeEgg(eggEntity);
+                Vector3 posRand = UnityEngine.Random.insideUnitSphere;
+                posRand.y = 0;
+                GameObject egg = GameObject.Instantiate(eggPrefab, agent.transform.position + posRand - agent.transform.forward, agent.transform.rotation);
+
+                egg.TryGetComponent(out Egg eggComponent);
+                if (eggComponent != null)
+                {
+                    Entity eggEntity = ScriptableObject.Instantiate(agent.entity);
+                    eggEntity.Attributes = EntityUtils.CombineAttributes(agent.entity.mateEntity.Attributes, agent.entity.Attributes, agent.status.Stress);
+                    eggEntity.Stats = EntityUtils.CombineInitialStats(agent.entity.mateEntity.Stats, agent.entity.Stats);
+                    eggEntity.IsPregnant = false;
+                    eggEntity.mateEntity = null;
+                    eggComponent.InitializeEgg(eggEntity);
+                }
+
+                egg.TryGetComponent(out Rigidbody rb);
+                rb.constraints = RigidbodyConstraints.FreezePosition;
+                CountdownTimer freezeTimer = new CountdownTimer(1f);
+                freezeTimer.OnTimerStop += () => rb.constraints = RigidbodyConstraints.None; 
+                freezeTimer.Start();
             }
         }
 
         agent.entity.IsPregnant = false;
-
+        agent.status.PregTime = 0f;
+        agent.entity.mateEntity = null;
         Complete = true;
     }
 }

@@ -1,17 +1,17 @@
-using UnityEngine;
-using System;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class DeathStrategy : IActionStrategy
 {
     private GoapAgent agent;
-    bool deathComplete;
 
-    readonly CountdownTimer timer;
+    CountdownTimer timer;
 
-    public bool CanPerform => agent != null;
+    public bool CanPerform => agent != null && agent.status.Alive;
 
     public bool Complete { get; private set; }
 
@@ -20,17 +20,17 @@ public class DeathStrategy : IActionStrategy
         this.agent = agent;
         timer = new CountdownTimer(1f);
         timer.OnTimerStart += () => Complete = false;
-        timer.OnTimerStop += () =>
-        {
-            Stop();
-            Complete = true;
-        };
+        timer.OnTimerStop += () => Complete = true;
     }
 
     public void Start()
     {
+        if (!agent.status.Alive)
+            return;
+        Debug.Log($"Death has come for {agent.name}");
         agent.animations.Death();
-        DropLoot(agent.entity.HasTags);
+        agent.navMeshAgent.isStopped = true;
+        //DropLoot(agent.entity.HasTags);
         timer.Start();
     }
 
@@ -41,8 +41,13 @@ public class DeathStrategy : IActionStrategy
 
     public void Stop()
     {
+        agent.animations.Death();
         DropLoot(agent.entity.HasTags);
         GameObject.Destroy(agent.gameObject, 3f);
+        agent.status.Alive = false;
+        Debug.Log($"The soul of {agent.name} was collected");
+
+        EntityEvents.OnEntityDespawn(agent.entity);
     }
 
     public void DropLoot(List<EntityTag> agentTags)
@@ -69,6 +74,9 @@ public class DeathStrategy : IActionStrategy
             loot.AddComponent(typeof(Rigidbody));
             loot.TryGetComponent(out Rigidbody rb);
             rb.useGravity = true;
+
+            loot.name = $"Consumable - {tag.HumanName()}";
+            loot.layer = LayerMask.NameToLayer("Consumable");
         }
 
     }

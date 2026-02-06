@@ -15,6 +15,8 @@ public class EntityUtils
             Desire = 0f,
             Age = 0f,
             Stress = 0f,
+            PregTime = 0f,
+            Alive = true
         };
 
         if (entityStats != null)
@@ -38,6 +40,9 @@ public class EntityUtils
             Thirst = currentStatus.Thirst,
             Desire = currentStatus.Desire,
             Age = currentStatus.Age,
+            Stress = currentStatus.Stress,
+            PregTime = currentStatus.PregTime,
+            Alive = currentStatus.Alive
         };
 
         if (baseStats == null)
@@ -47,14 +52,16 @@ public class EntityUtils
         finalStatus.Energy = Mathf.Clamp(currentStatus.Energy - baseStats.EnergyConsumptionRate, 0f, baseStats.Energy);
         finalStatus.Hunger = Mathf.Clamp(currentStatus.Hunger + baseStats.HungerRate, 0f, baseStats.Hunger);
         finalStatus.Thirst = Mathf.Clamp(currentStatus.Thirst + baseStats.ThirstRate, 0f, baseStats.Thirst);
+        //finalStatus.Desire = Mathf.Clamp(baseStats.Desire * Mathf.Sin(Time.time / baseStats.DesireRate), 0f, baseStats.Desire);
         finalStatus.Desire = Mathf.Clamp(currentStatus.Desire + baseStats.DesireRate, 0f, baseStats.Desire);
         finalStatus.Stress = Mathf.Clamp(currentStatus.Stress - baseStats.StressRecoveryRate, 0f, 2f * baseStats.StressThreshold);
         finalStatus.Age++;
+        finalStatus.PregTime++;
 
         float healthDelta = baseStats.HealthRegenRate;
         float healthConsumptionTicks = 0f;
-        if (finalStatus.Hunger >= baseStats.HungerThreshold) healthConsumptionTicks += .2f;
-        if (finalStatus.Thirst >= baseStats.ThirstThreshold) healthConsumptionTicks += .2f;
+        if (finalStatus.Hunger >= baseStats.HungerThreshold) healthConsumptionTicks += .5f;
+        if (finalStatus.Thirst >= baseStats.ThirstThreshold) healthConsumptionTicks += .5f;
         if (finalStatus.Desire >= baseStats.DesireThreshold) healthConsumptionTicks += .1f;
         if (finalStatus.Stamina < baseStats.Stamina * .1f) healthConsumptionTicks += 1f;
         if (finalStatus.Energy < baseStats.Energy * .1f) healthConsumptionTicks += 1f;

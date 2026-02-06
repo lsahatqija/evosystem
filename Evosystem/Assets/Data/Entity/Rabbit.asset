@@ -32,19 +32,19 @@ MonoBehaviour:
     Defense: 10
     Age: 100000
     Size: 1
-    HealthRegenRate: 10
-    HealthConsumptionRate: 1
+    HealthRegenRate: 1
+    HealthConsumptionRate: 10
     Stamina: 50
     StaminaRegenRate: 10
     StaminaConsumptionRate: 1
     Energy: 1000
     EnergyRegenRate: 3
     EnergyConsumptionRate: 1
-    Hunger: 100
-    HungerThreshold: 80
+    Hunger: 200
+    HungerThreshold: 150
     HungerRate: 1
-    Thirst: 100
-    ThirstThreshold: 80
+    Thirst: 300
+    ThirstThreshold: 200
     ThirstRate: 1
     Desire: 100
     DesireThreshold: 80
@@ -53,7 +53,7 @@ MonoBehaviour:
     StressRate: 1
     StressRecoveryRate: 10
     MaleChance: 0.5
-    PregnancyDuration: 1000
+    PregnancyDuration: 100
     EggDuration: 1
     ClutchSize: 1
   IsPregnant: 0
