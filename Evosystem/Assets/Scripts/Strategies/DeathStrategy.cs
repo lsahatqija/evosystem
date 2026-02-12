@@ -57,7 +57,7 @@ public class DeathStrategy : IActionStrategy
         {
             //GameObject loot = GameObject.Instantiate(new GameObject(), agent.transform.position + UnityEngine.Random.insideUnitSphere + Vector3.up, agent.transform.rotation);
             GameObject loot = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            loot.transform.position = agent.transform.position + UnityEngine.Random.insideUnitSphere + Vector3.up;
+            loot.transform.position = agent.transform.position + UnityEngine.Random.insideUnitSphere + Vector3.up * 1.5f;
             loot.transform.rotation = agent.transform.rotation;
 
             loot.AddComponent(typeof(Tags));
